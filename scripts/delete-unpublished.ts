@@ -1,4 +1,3 @@
-// scripts/delete-unpublished.ts
 import knex from "knex";
 import winston from "winston";
 import TutorialService from "../services/TutorialService";
@@ -10,7 +9,7 @@ async function main() {
   const db = knex({
     client: "sqlite3",
     connection: {
-      filename: process.env.SQLITE_FILENAME || "./tutorials.db",
+      filename: process.env.SQLITE_FILENAME || "",
     },
     useNullAsDefault: true,
   });

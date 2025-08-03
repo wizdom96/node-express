@@ -24,7 +24,7 @@ app.use(express.json());
 const knexConfig = {
   client: "sqlite3",
   connection: {
-    filename: process.env.SQLITE_FILENAME || "./tutorials.db",
+    filename: process.env.SQLITE_FILENAME || "",
   },
   useNullAsDefault: true,
 };
@@ -42,7 +42,7 @@ app.use(loggerMiddleware(container));
 app.use("/api/tutorials", tutorialRoutes(container));
 app.use("/api/categories", categoryRoutes(container));
 
-app.get("/", (req, res) => res.send("Node.js Knex CRUD API with Awilix"));
+app.get("/", (req, res) => res.send("Node.js"));
 
 async function connectWithRetry(
   client: MongoClient,
@@ -65,19 +65,15 @@ async function connectWithRetry(
 
 (async () => {
   try {
-    // Test SQLite connection
     await knexInstance.raw("SELECT 1");
     container.resolve("logger").info("Database connection successful");
 
-    // Run migrations
     await knexInstance.migrate.latest();
     container
       .resolve("logger")
       .info("Database migrations completed successfully");
 
-    // Set up Agenda
-    const mongoConnectionString =
-      process.env.MONGO_CONNECTION || "mongodb://mongodb:27017/agenda";
+    const mongoConnectionString = process.env.MONGO_CONNECTION || "";
     const mongoClient = new MongoClient(mongoConnectionString);
     await connectWithRetry(mongoClient);
     container.resolve("logger").info("MongoDB connection successful");
@@ -87,20 +83,16 @@ async function connectWithRetry(
       maxConcurrency: 5,
     });
 
-    // Define Agenda jobs
     cleanupJobs(agenda, container);
 
-    // Start Agenda
     await agenda.start();
     container.resolve("logger").info("Agenda job scheduler started");
 
-    // Schedule cleanup job
     await agenda.every("24 hours", "delete unpublished tutorials");
     container
       .resolve("logger")
       .info("Scheduled job: delete unpublished tutorials every 24 hours");
 
-    // Start Express server
     const PORT = process.env.PORT || 8081;
     app.listen(PORT, () => {
       container.resolve("logger").info(`Server running on port ${PORT}`);
